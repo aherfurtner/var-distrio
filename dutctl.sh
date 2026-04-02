@@ -16,6 +16,7 @@ FLASH_ATTACH_WAIT_SECONDS=2
 usage() {
     cat <<EOF
 Usage:
+  $0 status
   $0 [-f] sd <attach|detach>
   $0 power <on|off|power-cycle> [pause_seconds]
   $0 flash <image>
@@ -72,6 +73,45 @@ power_state() {
     else
         echo "unknown"
     fi
+}
+
+sd_state() {
+    local out
+    local state
+
+    if ! out="$(run_script "$SD_SCRIPT" test 2>&1)"; then
+        echo "unknown"
+        return 0
+    fi
+
+    state="$(printf '%s\n' "$out" | sed -n 's/^Current state: //p' | tail -n 1 | tr '[:upper:]' '[:lower:]')"
+
+    case "$state" in
+        *dut*)
+            echo "dut"
+            ;;
+        *host*)
+            echo "host"
+            ;;
+        *off*)
+            echo "off"
+            ;;
+        *)
+            echo "unknown"
+            ;;
+    esac
+}
+
+handle_status() {
+    local current_power_state
+    local current_sd_state
+
+    current_power_state="$(power_state)"
+    current_sd_state="$(sd_state)"
+
+    echo "Control status:"
+    echo "  power: $current_power_state"
+    echo "  sd: $current_sd_state"
 }
 
 confirm_sd_switch_when_powered() {
@@ -251,6 +291,11 @@ main() {
         esac
     done
     shift $((OPTIND - 1))
+
+    if [ $# -eq 1 ] && [ "$1" = "status" ]; then
+        handle_status
+        return 0
+    fi
 
     [ $# -ge 2 ] || usage
 
