@@ -20,6 +20,10 @@ PAGE = """\
 </html>
 """
 
+
+class ReusableTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
+
 class CamHandler(server.BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/':
@@ -53,8 +57,11 @@ class CamHandler(server.BaseHTTPRequestHandler):
                     self.wfile.write(jpg_bytes)
                     self.wfile.write(b'\r\n')
                     time.sleep(0.03)  # ~30 fps throttle
-            except Exception:
+            except (BrokenPipeError, ConnectionResetError):
                 # client disconnected
+                pass
+            except Exception:
+                # keep handler resilient for transient stream errors
                 pass
         else:
             self.send_error(404)
@@ -76,11 +83,15 @@ if __name__ == '__main__':
         print("Fehler: Kamera konnte nicht geöffnet werden:", device)
         raise SystemExit(1)
 
-    # HTTP server
-    with socketserver.TCPServer(("", port), CamHandler) as httpd:
-        print("Serving at port", port)
-        try:
-            httpd.serve_forever()
-        finally:
+    try:
+        # HTTP server
+        with ReusableTCPServer(("", port), CamHandler) as httpd:
+            print("Serving at port", port)
+            try:
+                httpd.serve_forever()
+            except KeyboardInterrupt:
+                print("\nStopping camera server...")
+    finally:
+        if cam.isOpened():
             cam.release()
 
