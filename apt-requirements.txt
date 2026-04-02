@@ -1,0 +1,13 @@
+# One apt package per line.
+# Lines starting with # are ignored.
+
+udisks2
+libglib2.0-bin
+curl
+pv
+zstd
+file
+coreutils
+util-linux
+ftdi-eeprom
+minicom
