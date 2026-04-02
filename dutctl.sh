@@ -6,9 +6,9 @@ set -u
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/.config"
-SD_SCRIPT="$SCRIPT_DIR/sdcardmux.sh"
-POWER_SCRIPT="$SCRIPT_DIR/shellyplug.sh"
-FLASH_SCRIPT="$SCRIPT_DIR/sdflash.sh"
+SD_SCRIPT="$SCRIPT_DIR/tools/sdcardmux.sh"
+POWER_SCRIPT="$SCRIPT_DIR/tools/shellyplug.sh"
+FLASH_SCRIPT="$SCRIPT_DIR/tools/sdflash.sh"
 
 FORCE=0
 FLASH_ATTACH_WAIT_SECONDS=2
