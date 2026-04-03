@@ -28,7 +28,7 @@ Notes:
   - If .config exists beside this script, it is sourced automatically.
   - sd attach -> SD card connected to DUT (mux mode: dut)
   - sd detach -> SD card disconnected from DUT / connected to host (mux mode: host)
-  - flash <image> -> power off DUT (with prompt if needed), detach SD to host, run sdflash clone
+  - flash <image> -> power off DUT (with prompt if needed), detach SD to host, run sdflash clone, reattach SD to DUT, optional power on prompt
 EOF
     exit 1
 }
@@ -254,13 +254,16 @@ handle_flash() {
     echo "Flashing image with sdflash..."
     run_script "$FLASH_SCRIPT" -a -i "$image" clone
 
+    echo "Reattaching SD card to DUT..."
+    run_script "$SD_SCRIPT" dut
+
     if [ ! -t 0 ]; then
-        echo "Flash completed. Non-interactive mode: leaving DUT power state unchanged (OFF)."
+        echo "Flash completed. SD card reattached to DUT. Non-interactive mode: leaving DUT power state unchanged (OFF)."
         return 0
     fi
 
     while true; do
-        read -r -p "Flash completed. Power ON DUT now? [y/N]: " answer
+        read -r -p "Flash completed and SD card is attached to DUT. Power ON DUT now? [y/N]: " answer
         case "$answer" in
             y|Y|yes|YES)
                 run_script "$POWER_SCRIPT" on || die "Failed to power on DUT."
